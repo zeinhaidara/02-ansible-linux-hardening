@@ -1,0 +1,25 @@
+---
+# Make the container look like a fresh EC2 host: sshd installed, keys present, running.
+- name: Prepare
+  hosts: all
+  become: true
+  tasks:
+    - name: Install sshd
+      ansible.builtin.package:
+        name: openssh-server
+        state: present
+        update_cache: true
+
+    - name: Generate SSH host keys
+      ansible.builtin.command: ssh-keygen -A
+      args:
+        creates: /etc/ssh/ssh_host_ed25519_key
+
+    - name: Start sshd
+      ansible.builtin.service:
+        name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
+        state: started
+
+    - name: Create a user without SSH keys for the lockout-guard test
+      ansible.builtin.user:
+        name: keyless
