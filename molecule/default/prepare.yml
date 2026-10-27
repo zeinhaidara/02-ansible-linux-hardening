@@ -2,17 +2,7 @@
 # Make the container look like a fresh EC2 host: sshd installed, keys present, running.
 - name: Prepare
   hosts: all
-  gather_facts: false # sudo fails with a PAM error until systemd has finished booting
   tasks:
-    - name: Wait for systemd to finish booting
-      ansible.builtin.wait_for:
-        path: /run/nologin
-        state: absent
-        timeout: 120
-
-    - name: Gather facts
-      ansible.builtin.setup:
-
     - name: Install sshd
       ansible.builtin.package:
         name: openssh-server

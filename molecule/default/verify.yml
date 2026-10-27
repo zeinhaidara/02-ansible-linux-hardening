@@ -1,7 +1,6 @@
 ---
 - name: Verify
   hosts: web
-  become: true
   vars_files:
     - ../../inventory/group_vars/all.yml
     - ../../inventory/group_vars/web.yml
