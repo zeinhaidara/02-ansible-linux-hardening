@@ -1,0 +1,4 @@
+---
+collections:
+  - name: ansible.posix # sysctl module
+    version: "1.6.1"

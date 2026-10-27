@@ -1,0 +1,13 @@
+---
+# Stays false until key login is confirmed. The role refuses to set it to true
+# unless the admin user has an authorized key.
+ssh_hardening_disable_password_auth: false
+
+ssh_hardening_banner_text: |
+  Authorized use only. Activity on this system is monitored and logged.
+
+# Never ban addresses inside the VPC (bastions, health checks).
+fail2ban_ignoreip: [127.0.0.1/8, "::1", 10.0.0.0/16]
+
+# Reboots happen through instance refresh, not on the host.
+auto_updates_automatic_reboot: false
