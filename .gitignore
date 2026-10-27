@@ -1,0 +1,11 @@
+*.retry
+.venv/
+venv/
+__pycache__/
+.cache/
+.ansible/
+molecule/**/.cache/
+*.log
+
+# Local-only instructions for Claude, never commit
+.instruction/
