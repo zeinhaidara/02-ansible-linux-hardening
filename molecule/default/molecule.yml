@@ -17,3 +17,8 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     groups: [web]
+provisioner:
+  name: ansible
+  env:
+    # Molecule does not read the repo's ansible.cfg, so point it at the roles.
+    ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/roles"
