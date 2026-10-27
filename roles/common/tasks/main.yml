@@ -1,0 +1,29 @@
+---
+# Only root should read or change the SSH server config.
+- name: Restrict /etc/ssh/sshd_config to root
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Gather service state
+  ansible.builtin.service_facts:
+
+# Masked, not just disabled, so a package upgrade or socket cannot start them again.
+- name: Mask legacy services that are installed
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    masked: true
+  loop: "{{ common_legacy_services }}"
+  when: item in ansible_facts.services
+
+- name: Apply network sysctl hardening
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/90-baseline-hardening.conf
+    sysctl_set: true
+  loop: "{{ common_sysctl_settings | dict2items }}"

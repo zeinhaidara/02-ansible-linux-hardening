@@ -1,0 +1,18 @@
+---
+common_sysctl_settings:
+  net.ipv4.conf.all.rp_filter: 1 # drop spoofed source addresses (use 2 on asymmetric multi-ENI hosts)
+  net.ipv4.conf.default.rp_filter: 1
+  net.ipv4.conf.all.accept_redirects: 0 # nobody on the path may rewrite our routes
+  net.ipv4.conf.default.accept_redirects: 0
+  net.ipv6.conf.all.accept_redirects: 0
+  net.ipv6.conf.default.accept_redirects: 0
+  net.ipv4.conf.all.send_redirects: 0 # a web host is not a router
+  net.ipv4.tcp_syncookies: 1 # survive SYN floods
+
+# Network daemons a web server never needs. Masked only if installed.
+common_legacy_services:
+  - avahi-daemon.service
+  - cups.service
+  - rpcbind.service
+  - vsftpd.service
+  - telnet.service

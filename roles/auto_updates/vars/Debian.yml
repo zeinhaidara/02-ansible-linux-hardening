@@ -1,0 +1,7 @@
+---
+auto_updates_packages: [unattended-upgrades]
+auto_updates_config_files:
+  - { src: 20auto-upgrades.j2, dest: /etc/apt/apt.conf.d/20auto-upgrades }
+  # Sorts after the packaged 50unattended-upgrades so it can override it.
+  - { src: 52unattended-upgrades-local.j2, dest: /etc/apt/apt.conf.d/52unattended-upgrades-local }
+auto_updates_timers: [apt-daily.timer, apt-daily-upgrade.timer]

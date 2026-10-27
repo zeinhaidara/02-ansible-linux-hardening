@@ -1,0 +1,24 @@
+---
+- name: Load OS-family variables
+  ansible.builtin.include_vars: "{{ ansible_facts['os_family'] }}.yml"
+
+- name: Install the automatic update package
+  ansible.builtin.package:
+    name: "{{ auto_updates_packages }}"
+    state: present
+
+- name: Configure security-only automatic updates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ auto_updates_config_files }}"
+
+- name: Enable the update timers
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: "{{ auto_updates_timers }}"

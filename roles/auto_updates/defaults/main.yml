@@ -1,0 +1,3 @@
+---
+# Off: an unplanned reboot of a web host is an outage.
+auto_updates_automatic_reboot: false

@@ -1,0 +1,6 @@
+---
+# fail2ban comes from EPEL. epel-release is in Rocky/Alma extras; on RHEL,
+# override this with the EPEL release RPM URL.
+fail2ban_repo_packages: [epel-release]
+fail2ban_packages: [fail2ban, python3-systemd, nftables]
+fail2ban_ssh_service_name: sshd

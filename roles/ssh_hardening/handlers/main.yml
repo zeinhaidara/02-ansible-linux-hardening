@@ -1,0 +1,13 @@
+---
+# Handlers run in the order written and a failure stops the play,
+# so sshd is never restarted on a config that fails `sshd -t`.
+- name: Validate sshd configuration
+  ansible.builtin.command: /usr/sbin/sshd -t
+  changed_when: false
+  listen: sshd config changed
+
+- name: Restart sshd
+  ansible.builtin.service:
+    name: "{{ ssh_hardening_service_name }}"
+    state: restarted
+  listen: sshd config changed

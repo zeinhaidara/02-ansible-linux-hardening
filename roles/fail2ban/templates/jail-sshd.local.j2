@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+[DEFAULT]
+ignoreip = {{ fail2ban_ignoreip | join(' ') }}
+banaction = {{ fail2ban_banaction }}
+banaction_allports = {{ fail2ban_banaction }}[type=allports]
+
+[sshd]
+enabled = true
+# Read sshd events from the journal: auth.log does not exist on RHEL.
+backend = systemd
+journalmatch = _SYSTEMD_UNIT={{ fail2ban_ssh_service_name }}.service
+maxretry = {{ fail2ban_sshd_maxretry }}
+findtime = {{ fail2ban_sshd_findtime }}
+bantime = {{ fail2ban_sshd_bantime }}

@@ -1,0 +1,36 @@
+---
+# Read-only checks, kept separate so Molecule can test them on their own.
+
+- name: Read sshd_config
+  ansible.builtin.slurp:
+    src: /etc/ssh/sshd_config
+  register: ssh_hardening_main_config
+
+- name: Assert that sshd_config includes the drop-in directory
+  ansible.builtin.assert:
+    that: (ssh_hardening_main_config.content | b64decode) is search('(?im)^\s*Include\s+/etc/ssh/sshd_config\.d/\*\.conf')
+    fail_msg: sshd_config does not include sshd_config.d/*.conf, so the drop-in would be ignored.
+
+# Lockout guard. Keys from AuthorizedKeysCommand (e.g. EC2 Instance Connect) are not seen.
+- name: Refuse to disable password auth unless the admin user has an authorized key
+  when: ssh_hardening_disable_password_auth | bool
+  block:
+    - name: Look up the admin user
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ ssh_hardening_admin_user }}"
+
+    - name: Read the admin user's authorized_keys
+      ansible.builtin.slurp:
+        src: "{{ getent_passwd[ssh_hardening_admin_user][4] }}/.ssh/authorized_keys"
+      register: ssh_hardening_authorized_keys
+      failed_when: false
+
+    - name: Assert at least one key is present
+      ansible.builtin.assert:
+        that:
+          - ssh_hardening_authorized_keys.content is defined
+          - (ssh_hardening_authorized_keys.content | b64decode).splitlines() | select('match', '^\s*[^#\s]') | list | length > 0
+        fail_msg: >-
+          User '{{ ssh_hardening_admin_user }}' has no authorized key, so password
+          auth stays on. Add a key and confirm key login first.

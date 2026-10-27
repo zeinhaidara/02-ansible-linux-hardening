@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+PermitRootLogin no
+PermitEmptyPasswords no
+HostbasedAuthentication no
+IgnoreRhosts yes
+PermitUserEnvironment no
+{% if ssh_hardening_disable_password_auth | bool %}
+PasswordAuthentication no
+# With PAM, keyboard-interactive would still accept passwords.
+KbdInteractiveAuthentication no
+{% endif %}
+
+MaxAuthTries {{ ssh_hardening_max_auth_tries }}
+LoginGraceTime {{ ssh_hardening_login_grace_time }}
+ClientAliveInterval {{ ssh_hardening_client_alive_interval }}
+ClientAliveCountMax {{ ssh_hardening_client_alive_count_max }}
+
+X11Forwarding no
+LogLevel VERBOSE
+Banner /etc/issue.net
+
+Ciphers {{ ssh_hardening_ciphers | join(',') }}
+MACs {{ ssh_hardening_macs | join(',') }}
+KexAlgorithms {{ ssh_hardening_kex_algorithms | join(',') }}
