@@ -76,9 +76,13 @@ ansible-playbook site.yml                                   # whole fleet
 
 | Check | Status |
 |---|---|
-| `yamllint .`, `ansible-lint` (production profile), `ansible-playbook site.yml --syntax-check` | Pass locally |
-| `--check` with `-i inventory/local.ini` | Not run: no Ubuntu or RHEL 9 machine was available locally |
-| `molecule test` on Ubuntu 24.04 and Rocky 9: converge, idempotence, verify | Runs in CI. Not run locally because the Docker daemon was not running |
+| `yamllint .`, `ansible-lint` (production profile), `ansible-playbook site.yml --syntax-check` | Pass, locally and in CI |
+| `molecule test` on Ubuntu 24.04 and Rocky 9: converge, idempotence (`changed=0`), verify | Pass in CI |
+| `--check` with `-i inventory/local.ini` | Not run: no Ubuntu or RHEL 9 machine was available |
+
+Molecule runs as root without `sudo` (it is broken in the Rocky 9 test image) and uses fail2ban's
+`dummy` ban action (the containers have no firewall). So the `sudo` path and real nftables banning are
+not exercised by CI. The roles have not been run against a real EC2 host.
 
 Verification checks what the host actually does, not what the tasks report:
 - `sshd -T` values and the exact crypto lists
