@@ -1,0 +1,23 @@
+---
+- name: Apply OS hardening baseline to the web tier
+  hosts: web
+  become: true
+  # SSH changes can lock us out, so roll out in batches and stop on the first failure.
+  serial: 25%
+  max_fail_percentage: 0
+
+  pre_tasks:
+    - name: Refuse to run on an unsupported operating system
+      ansible.builtin.assert:
+        that: >-
+          (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04')
+          or (ansible_facts['distribution'] in ['RedHat', 'Rocky', 'AlmaLinux']
+              and ansible_facts['distribution_major_version'] == '9')
+        fail_msg: Supported targets are Ubuntu 24.04 and RHEL/Rocky/AlmaLinux 9.
+      tags: [always]
+
+  roles:
+    - { role: common, tags: [common] }
+    - { role: ssh_hardening, tags: [ssh_hardening] }
+    - { role: fail2ban, tags: [fail2ban] }
+    - { role: auto_updates, tags: [auto_updates] }

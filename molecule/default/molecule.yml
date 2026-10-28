@@ -1,0 +1,24 @@
+---
+# CI sets MOLECULE_PLATFORM and MOLECULE_IMAGE per matrix entry.
+# The images run systemd, which needs a privileged container.
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../../requirements.yml
+driver:
+  name: docker
+platforms:
+  - name: "${MOLECULE_PLATFORM:-ubuntu2404}"
+    image: "${MOLECULE_IMAGE:-geerlingguy/docker-ubuntu2404-ansible:latest}"
+    pre_build_image: true
+    privileged: true
+    cgroupns_mode: host
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    groups: [web]
+provisioner:
+  name: ansible
+  env:
+    # Molecule does not read the repo's ansible.cfg, so point it at the roles.
+    ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/roles"

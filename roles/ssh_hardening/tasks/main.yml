@@ -1,0 +1,32 @@
+---
+- name: Load OS-family variables
+  ansible.builtin.include_vars: "{{ ansible_facts['os_family'] }}.yml"
+
+- name: Run preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+
+- name: Install the login banner
+  ansible.builtin.copy:
+    content: "{{ ssh_hardening_banner_text }}"
+    dest: /etc/issue.net
+    owner: root
+    group: root
+    mode: "0644"
+
+# Named 00- because sshd keeps the first value it reads, and distro drop-ins
+# such as 50-cloud-init.conf would otherwise win.
+# `validate` keeps an invalid file off disk; the handlers re-check the full
+# config before restarting.
+- name: Install the sshd hardening drop-in
+  ansible.builtin.template:
+    src: sshd_hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/00-baseline-hardening.conf
+    owner: root
+    group: root
+    mode: "0600"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: sshd config changed
+
+# Restart now so a bad change stops the rollout before the next role or batch.
+- name: Apply sshd changes
+  ansible.builtin.meta: flush_handlers

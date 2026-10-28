@@ -1,0 +1,14 @@
+---
+# Crypto lists live in inventory/group_vars/all.yml.
+ssh_hardening_max_auth_tries: 4
+ssh_hardening_login_grace_time: 60
+# Idle sessions are dropped after interval x count = 10 minutes.
+ssh_hardening_client_alive_interval: 300
+ssh_hardening_client_alive_count_max: 2
+
+# Off by default. When true, the role first checks that this user has an authorized key.
+ssh_hardening_disable_password_auth: false
+ssh_hardening_admin_user: "{{ ansible_user | default(ansible_user_id) }}"
+
+ssh_hardening_banner_text: |
+  Authorized use only.

@@ -1,0 +1,81 @@
+---
+- name: Verify
+  hosts: web
+  vars_files:
+    - ../../inventory/group_vars/all.yml
+    - ../../inventory/group_vars/web.yml
+  tasks:
+    - name: Dump the effective sshd configuration
+      ansible.builtin.command: /usr/sbin/sshd -T
+      register: verify_sshd
+      changed_when: false
+
+    - name: Assert sshd settings
+      ansible.builtin.assert:
+        that:
+          - "'permitrootlogin no' in verify_sshd.stdout_lines"
+          - "'permitemptypasswords no' in verify_sshd.stdout_lines"
+          - "'maxauthtries 4' in verify_sshd.stdout_lines"
+          - "'logingracetime 60' in verify_sshd.stdout_lines"
+          - "'clientaliveinterval 300' in verify_sshd.stdout_lines"
+          - "'clientalivecountmax 2' in verify_sshd.stdout_lines"
+          - "'x11forwarding no' in verify_sshd.stdout_lines"
+          - "'banner /etc/issue.net' in verify_sshd.stdout_lines"
+          - "('ciphers ' ~ ssh_hardening_ciphers | join(',')) in verify_sshd.stdout_lines"
+          - "('macs ' ~ ssh_hardening_macs | join(',')) in verify_sshd.stdout_lines"
+          - "('kexalgorithms ' ~ ssh_hardening_kex_algorithms | join(',')) in verify_sshd.stdout_lines"
+          - "'passwordauthentication no' not in verify_sshd.stdout_lines" # off by default
+
+    - name: Lockout guard rejects a user without keys
+      block:
+        - name: Run preflight for a keyless user
+          ansible.builtin.include_role:
+            name: ssh_hardening
+            tasks_from: preflight.yml
+          vars:
+            ssh_hardening_disable_password_auth: true
+            ssh_hardening_admin_user: keyless
+        - name: Fail if preflight passed
+          ansible.builtin.fail:
+            msg: Preflight allowed disabling password auth for a user with no key.
+      rescue:
+        - name: Assert the guard caused the failure
+          ansible.builtin.assert:
+            that: "'has no authorized key' in ansible_failed_result.msg"
+
+    - name: Check the sshd jail
+      ansible.builtin.command: fail2ban-client status sshd
+      changed_when: false
+
+    - name: Gather installed packages
+      ansible.builtin.package_facts:
+
+    - name: Check the Ubuntu update configuration
+      when: ansible_facts['os_family'] == 'Debian'
+      block:
+        - name: Dump unattended-upgrades settings
+          ansible.builtin.command: apt-config dump Unattended-Upgrade
+          register: verify_apt
+          changed_when: false
+        - name: Assert security-only updates without reboots
+          ansible.builtin.assert:
+            that:
+              - "'unattended-upgrades' in ansible_facts.packages"
+              - "'-security' in verify_apt.stdout"
+              - "'-updates' not in verify_apt.stdout"
+              - "'Unattended-Upgrade::Automatic-Reboot \"false\";' in verify_apt.stdout"
+
+    - name: Check the RHEL update configuration
+      when: ansible_facts['os_family'] == 'RedHat'
+      block:
+        - name: Read dnf-automatic settings
+          ansible.builtin.slurp:
+            src: /etc/dnf/automatic.conf
+          register: verify_dnf
+        - name: Assert security-only updates without reboots
+          ansible.builtin.assert:
+            that:
+              - "'dnf-automatic' in ansible_facts.packages"
+              - (verify_dnf.content | b64decode) is search('(?m)^upgrade_type = security$')
+              - (verify_dnf.content | b64decode) is search('(?m)^apply_updates = yes$')
+              - (verify_dnf.content | b64decode) is search('(?m)^reboot = never$')

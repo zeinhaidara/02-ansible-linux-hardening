@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+[commands]
+upgrade_type = security
+download_updates = yes
+apply_updates = yes
+reboot = {{ 'when-needed' if auto_updates_automatic_reboot | bool else 'never' }}
+
+[emitters]
+emit_via = stdio

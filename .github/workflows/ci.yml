@@ -1,0 +1,47 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: ansible-galaxy collection install -r requirements.yml
+      - run: yamllint .
+      - run: ansible-lint
+      - run: ansible-playbook site.yml --syntax-check
+
+  molecule:
+    needs: lint
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu2404
+            image: geerlingguy/docker-ubuntu2404-ansible:latest
+          - platform: rocky9
+            image: geerlingguy/docker-rockylinux9-ansible:latest
+    env:
+      MOLECULE_PLATFORM: ${{ matrix.platform }}
+      MOLECULE_IMAGE: ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      # converge, idempotence (second run must report changed=0), verify
+      - run: molecule test

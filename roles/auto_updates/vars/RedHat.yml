@@ -1,0 +1,5 @@
+---
+auto_updates_packages: [dnf-automatic]
+auto_updates_config_files:
+  - { src: automatic.conf.j2, dest: /etc/dnf/automatic.conf }
+auto_updates_timers: [dnf-automatic.timer]

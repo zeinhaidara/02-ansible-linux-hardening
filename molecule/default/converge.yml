@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: web
+  # No become: Molecule connects as root, and sudo is broken in the Rocky 9 image (PAM error).
+  vars_files:
+    - ../../inventory/group_vars/all.yml
+    - ../../inventory/group_vars/web.yml
+  vars:
+    fail2ban_banaction: dummy # containers have no firewall backend
+  roles:
+    - common
+    - ssh_hardening
+    - fail2ban
+    - auto_updates
