@@ -20,6 +20,15 @@
   loop: "{{ common_legacy_services }}"
   when: item in ansible_facts.services
 
+# Minimal images may not ship the directory, and the sysctl module will not create it.
+- name: Ensure the sysctl drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/sysctl.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Apply network sysctl hardening
   ansible.posix.sysctl:
     name: "{{ item.key }}"
