@@ -9,3 +9,6 @@ molecule/**/.cache/
 
 # Local-only instructions for Claude, never commit
 .instruction/
+*.tfplan
+*.pyc
+memory/

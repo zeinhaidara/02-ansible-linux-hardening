@@ -1,4 +1,4 @@
-# Ansible Linux Hardening
+# CIS-subset Linux hardening roles
 
 Baseline OS hardening for a web-tier EC2 fleet running **Ubuntu 24.04** and **RHEL 9 (Rocky, Alma)**.
 Every web server gets this before its application is installed.
@@ -72,7 +72,7 @@ ansible-playbook site.yml --check --diff -l web-ubuntu-01   # dry run on one hos
 ansible-playbook site.yml                                   # whole fleet
 ```
 
-## Testing
+## Validation
 
 | Check | Status |
 |---|---|
@@ -90,7 +90,7 @@ Verification checks what the host actually does, not what the tasks report:
 - `fail2ban-client status sshd` succeeds
 - the update package and its security-only, no-reboot config
 
-## Limitations
+## Known limitations
 
 - On RHEL itself (not Rocky or Alma), point `fail2ban_repo_packages` at the EPEL release RPM URL.
 - The lockout guard only checks `~/.ssh/authorized_keys`. It does not see keys from `AuthorizedKeysCommand`, such as EC2 Instance Connect.
